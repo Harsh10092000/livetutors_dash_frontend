@@ -11,6 +11,8 @@ import {
 import Index from './pages/index/Index';
 import RequestTutor from './pages/requesttutor/RequestTutor';
 import TutorProfileForm from './pages/tutorProfileForm/TutorProfileForm';
+import { ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 const router = createBrowserRouter([
 
@@ -56,7 +58,24 @@ function App() {
 
   const {currentUser} = useContext(AuthContext);
   console.log('currentUser ', currentUser);
-  return <RouterProvider router={router} />;
+  return (
+    <>
+      <RouterProvider router={router} />
+      <ToastContainer
+        position="top-right"
+        autoClose={5000}
+        hideProgressBar={false}
+        newestOnTop={false}
+        closeOnClick
+        rtl={false}
+        pauseOnFocusLoss
+        draggable
+        pauseOnHover
+        theme="light"
+        style={{ zIndex: 9999 }}
+      />
+    </>
+  );
 }
 
 export default App 

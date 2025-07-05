@@ -75,9 +75,9 @@ const generateUrlString = (city, subject, tutoringType) => {
 
 const TutorProfileForm = () => {
 
-  const { currentUser } = useContext(AuthContext);
+    const { currentUser } = useContext(AuthContext);
 
-  const [formData, setFormData] = useState({
+    const [formData, setFormData] = useState({
     requestId: generateRequestId(),
     urlString: '',
     streetAddress: '',
@@ -85,22 +85,22 @@ const TutorProfileForm = () => {
     city: null,
     genderPreference: '',
     subjects: [],
-    studentLevel: '',
+        studentLevel: '',
     tutoringTypes: [],
-    travelDistance: '',
-    budget: '',
+        travelDistance: '',
+        budget: '',
     timePreferenceType: '',
-    timePreference: '',
+        timePreference: '',
     languages: [],
     requirementDetails: '',
     uploadedFiles: [],
     user_id: currentUser?.user.id,
     name: currentUser?.user.name,
     email: currentUser?.user.email,
-    phone: currentUser?.user.phone
-  });
+    phone: currentUser?.user.phone  
+    });
 
-  const [errors, setErrors] = useState({});
+    const [errors, setErrors] = useState({});
   const navigate = useNavigate();
 
 
@@ -132,9 +132,9 @@ const TutorProfileForm = () => {
   }, [formData.city, formData.subjects, formData.tutoringTypes]);
 
 
-  const validateForm = () => {
-    let tempErrors = {};
-    let isValid = true;
+    const validateForm = () => {
+        let tempErrors = {};
+        let isValid = true;
 
     // Address validation
     if (!formData.streetAddress.trim()) {
@@ -149,8 +149,8 @@ const TutorProfileForm = () => {
 
     if (!formData.city) {
       tempErrors.city = 'City is required';
-      isValid = false;
-    }
+            isValid = false;
+        }
 
 
     // Subject validation
@@ -160,14 +160,14 @@ const TutorProfileForm = () => {
       isValid = false;
     } else if (!subjectRegex.test(formData.subjects.join(','))) {
       tempErrors.subjects = 'Only letters, spaces and commas allowed';
-      isValid = false;
-    }
+            isValid = false;
+        }
 
     // Tutoring type validation
     if (formData.tutoringTypes.length === 0) {
       tempErrors.tutoringTypes = 'Please select a tutoring type';
-      isValid = false;
-    }
+            isValid = false;
+        }
 
     // Travel distance validation for "Travel to student" option
     if (formData.tutoringTypes.includes('Travel to student')) {
@@ -176,24 +176,24 @@ const TutorProfileForm = () => {
         isValid = false;
       } else if (formData.travelDistance < 1 || formData.travelDistance > 50) {
         tempErrors.travelDistance = 'Distance should be between 1-50 km';
-        isValid = false;
+            isValid = false;
       }
-    }
+        }
 
-    // Budget validation
+        // Budget validation
     if (formData.budget && (isNaN(formData.budget) || formData.budget < 100)) {
       tempErrors.budget = 'Minimum budget should be ₹100';
-      isValid = false;
-    }
+            isValid = false;
+        }
 
-    setErrors(tempErrors);
-    return isValid;
-  };
+        setErrors(tempErrors);
+        return isValid;
+    };
 
 
   const handleSubmit = async (e) => {
-    e.preventDefault();
-
+        e.preventDefault();
+    
     if (!validateForm()) {
       return;
     }
@@ -201,7 +201,7 @@ const TutorProfileForm = () => {
     try {
       // Create FormData object
       const formDataToSend = new FormData();
-
+      
       // Add all form fields to FormData
       Object.keys(formData).forEach(key => {
         if (key === 'uploadedFiles') {
@@ -233,14 +233,14 @@ const TutorProfileForm = () => {
     } catch (error) {
       console.error('Error submitting form:', error);
       toast.error(error.response?.data?.message || 'Error submitting form');
-    }
-  };
+        }
+    };
 
   const [showStep, setShowStep] = useState(1);
 
-  const handleStepChange = (val) => {
-    setShowStep(showStep == val ? 0 : val);
-  };
+    const handleStepChange = (val) => {
+      setShowStep(showStep == val ? 0 : val);
+    };
 
 
 
@@ -272,29 +272,29 @@ const TutorProfileForm = () => {
   };
 
 
-  return (
-    <div className="tutor-request-wrapper">
-      <div className="tutor-request-container">
-        {/* <div className="form-title">Request a Tutor</div> */}
-
+    return (
+      <div className="tutor-request-wrapper">
+        <div className="tutor-request-container">
+          {/* <div className="form-title">Request a Tutor</div> */}
+  
         {/* Step 1: Basic Info */}
         <div onClick={() => handleStepChange(1)} className={`section-title cursor-pointer not-selected ${showStep == 1 ? 'selected' : ''}`}>
           <Person /> Basic Information
           <KeyboardArrowDown className={`chevron-icon${showStep == 1 ? ' open' : ''}`} />
-        </div>
+              </div>
         <BasicInformation showStep={showStep} setShowStep={setShowStep} handleNextStep={handleNextStep} />
 
         {/* Step 2: Introduction Video */}
         <div onClick={() => handleStepChange(2)} className={`section-title cursor-pointer not-selected ${showStep == 2 ? 'selected' : ''}`}>
           <InsertDriveFile /> Introduction Video
           <KeyboardArrowDown className={`chevron-icon${showStep == 2 ? ' open' : ''}`} />
-        </div>
+              </div>
         <IntroductionVideo showStep={showStep} setShowStep={setShowStep} handleNextStep={handleNextStep} handleSkipStep={handleSkipStep} />
         {/* Step 3: Skills and Expertise */}
         <div onClick={() => handleStepChange(3)} className={`section-title cursor-pointer not-selected ${showStep == 3 ? 'selected' : ''}`}>
           <School /> Skills and Expertise
           <KeyboardArrowDown className={`chevron-icon${showStep == 3 ? ' open' : ''}`} />
-        </div>
+              </div>
         <SkillsAndExpertise showStep={showStep} setShowStep={setShowStep} handleNextStep={handleNextStep} handleSkipStep={handleSkipStep} />
        
 
@@ -302,7 +302,7 @@ const TutorProfileForm = () => {
         <div onClick={() => handleStepChange(4)} className={`section-title cursor-pointer not-selected ${showStep == 4 ? 'selected' : ''}`}>
           <LocationOn /> Address Information
           <KeyboardArrowDown className={`chevron-icon${showStep == 4 ? ' open' : ''}`} />
-        </div>
+              </div>
        <AddressSection showStep={showStep} setShowStep={setShowStep} handleNextStep={handleNextStep} handleSkipStep={handleSkipStep} />
 
 
@@ -311,21 +311,21 @@ const TutorProfileForm = () => {
         <div onClick={() => handleStepChange(5)} className={`section-title cursor-pointer not-selected ${showStep == 5 ? 'selected' : ''}`}>
           <School /> Education Details
           <KeyboardArrowDown className={`chevron-icon${showStep == 5 ? ' open' : ''}`} />
-        </div>
+            </div>
        <EducationDetails showStep={showStep} setShowStep={setShowStep} handleNextStep={handleNextStep} handleSkipStep={handleSkipStep} />
 
         {/* Teaching and Professional Experience */}
         <div onClick={() => handleStepChange(6)} className={`section-title cursor-pointer not-selected ${showStep == 6 ? 'selected' : ''}`}>
           <School /> Teaching and Professional Experience
           <KeyboardArrowDown className={`chevron-icon${showStep == 6 ? ' open' : ''}`} />
-        </div>
+              </div>
         <TeachingAndProfessionalExperience showStep={showStep} setShowStep={setShowStep} handleNextStep={handleNextStep} handleSkipStep={handleSkipStep} />
 
         {/* Fee Details */}
         <div onClick={() => handleStepChange(7)} className={`section-title cursor-pointer not-selected ${showStep == 7 ? 'selected' : ''}`}>
           <AttachFile /> Fee Details
           <KeyboardArrowDown className={`chevron-icon${showStep == 7 ? ' open' : ''}`} />
-        </div>
+                            </div>
       <FeeDetails showStep={showStep} setShowStep={setShowStep} handleNextStep={handleNextStep} handleSkipStep={handleSkipStep} />
 
         {/* Tutoring Preferences & Languages */}
@@ -336,9 +336,9 @@ const TutorProfileForm = () => {
         <TutoringPreferencesLanguages showStep={showStep} setShowStep={setShowStep} handleNextStep={handleNextStep} handleSkipStep={handleSkipStep} />
 
 
+        </div>
       </div>
-    </div>
-  );
+      );
 };
 
 export default TutorProfileForm; 

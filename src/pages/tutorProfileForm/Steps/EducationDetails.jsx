@@ -1,15 +1,33 @@
 import React from 'react'
 import { TextField, FormControl, InputLabel, Select, MenuItem, FormHelperText, IconButton, Button, ListSubheader } from '@mui/material';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import AddIcon from '@mui/icons-material/Add';
 import CloseIcon from '@mui/icons-material/Close';
-
+import axios from 'axios';
+import { AuthContext } from '../../../context2/AuthContext';
+import { useContext } from 'react';
+import { toast } from 'react-toastify';
 const EducationDetails = ({showStep, setShowStep, handleNextStep, handleSkipStep}) => {
     const [errors, setErrors] = useState({});
-  // Add state for education details
-  const [education, setEducation] = useState([
-    { degree: '', specialization: '', institution: '', year: '', grade: '' }
-  ]);
+    const {currentUser} = useContext(AuthContext);
+    const [education, setEducation] = useState([]);
+    useEffect(() => {
+        axios.get(`${import.meta.env.VITE_BACKEND}/api/becameTutor/fetchEducationInfo/${currentUser?.user.id}`)
+          .then(res => {
+            setEducation(res.data.map(edu => ({
+              degree: edu.degree_name,
+              specialization: edu.speciality,
+              institution: edu.university,
+              year: edu.end_year,
+              grade: edu.score
+            })));
+          })
+    }, [showStep, currentUser]);
+
+    // Add state for education details
+  // const [education, setEducation] = useState([
+  //   { degree: '', specialization: '', institution: '', year: '', grade: '' }
+  // ]);
   
   const degreeOptions = [
     'High School', 'Diploma', 'Bachelors/Undergraduate', 'Masters/Postgraduate', 'MPhil', 'Doctorate/PhD', 'Other'
@@ -31,6 +49,39 @@ const EducationDetails = ({showStep, setShowStep, handleNextStep, handleSkipStep
     setEducation(prev => prev.filter((_, i) => i !== idx));
   };
 
+  const handleSubmit = async () => {
+    console.log("education" ,education);
+    await axios.delete(`${import.meta.env.VITE_BACKEND}/api/becameTutor/deleteEducationInfo/${currentUser?.user.id}`)
+      .then(async (res) => {
+        console.log(res);
+        const educationData = education.map(edu => ({
+          degree: edu.degree,
+          specialization: edu.specialization,
+          institution: edu.institution,
+          year: edu.year,
+          grade: edu.grade,
+          user_id: currentUser?.user.id
+        }));
+        await axios.post(`${import.meta.env.VITE_BACKEND}/api/becameTutor/addEducationInfo`, educationData, {
+          headers: {
+            'Content-Type': 'application/json'
+          }
+        })
+          .then(res => {
+            console.log(res);
+            toast.success('Education added successfully');
+            handleNextStep();
+          })
+          .catch(err => {
+            console.log(err);
+            toast.error('Failed to add education');
+          })
+      })
+      .catch(err => {
+        console.log(err);
+      })
+    
+  } 
 
   return (
     <div className={`section-content-animated${showStep == 5 ? ' open' : ''}`}>
@@ -88,7 +139,7 @@ const EducationDetails = ({showStep, setShowStep, handleNextStep, handleSkipStep
           ))}
           <Button startIcon={<AddIcon />} onClick={handleAddEdu} variant="outlined" sx={{ mt: 1 }}>Add new</Button>
           <div className="step-btn-group">
-            <Button variant="contained" className="save-next-btn" onClick={handleNextStep}>Save & Next</Button>
+            <Button variant="contained" className="save-next-btn" onClick={handleSubmit}>Save & Next</Button>
             <Button variant="outlined" className="skip-btn" onClick={handleSkipStep}>Skip</Button>
           </div>
         </div>

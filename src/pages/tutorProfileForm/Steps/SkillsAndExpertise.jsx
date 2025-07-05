@@ -3,13 +3,27 @@ import { Autocomplete, TextField, FormControl, InputLabel, Select, MenuItem, For
 import { useState } from 'react';
 import AddIcon from '@mui/icons-material/Add';
 import CloseIcon from '@mui/icons-material/Close';
-
+import axios from 'axios';
+import { AuthContext } from '../../../context2/AuthContext';
+import { useContext, useEffect } from 'react';
+import { toast } from 'react-toastify';
 const SkillsAndExpertise = ({showStep, setShowStep, handleNextStep, handleSkipStep}) => {
     const [errors, setErrors] = useState({});
-  
+    const {currentUser} = useContext(AuthContext);
+    const [skills, setSkills] = useState([{ skill: '', from: '', to: '' }]);
 
+    useEffect(() => {
+      axios.get(`${import.meta.env.VITE_BACKEND}/api/becameTutor/fetchSkillsInfo/${currentUser?.user.id}`)
+        .then(res => {  
+          setSkills(res.data.map(skill => ({
+            skill: skill.skill_name,
+            from: skill.from_level,
+            to: skill.to_level
+          })));
+        })
+    }, [showStep, currentUser]);
       // Add state for skills
-  const [skills, setSkills] = useState([{ skill: '', from: '', to: '' }]);
+  console.log(skills);
   const skillOptions = [
     'HTML', 'CSS', 'JavaScript', 'React', 'Node.js', 'Python', 'Java', 'C++', 'SQL', 'Data Science', 'Machine Learning', 'Public Speaking', 'Mathematics', 'Physics', 'Chemistry', 'Biology', 'Economics', 'History', 'Geography', 'Art', 'Music', 'Dance', 'Yoga', 'Digital Marketing', 'Web Development', 'Programming', 'Accounting', 'Business Studies', 'UPSC', 'IIT-JEE', 'NEET', 'CAT', 'GATE'
   ];
@@ -54,7 +68,38 @@ const SkillsAndExpertise = ({showStep, setShowStep, handleNextStep, handleSkipSt
     setSkills(prev => prev.filter((_, i) => i !== idx));
   };
 
+  const [skllsDeleted, setSkllsDeleted] = useState(false);
 
+  const handleSubmit = async () => {
+    //.log(skills);
+    const skillsData = skills.map(skill => ({
+      skill: skill.skill,
+      from: skill.from,
+      to: skill.to,
+      user_id: currentUser?.user.id
+    }));  
+    //console.log(skillsData);
+    await axios.delete(`${import.meta.env.VITE_BACKEND}/api/becameTutor/deleteSkillsInfo/${currentUser?.user.id}`)
+      .then(async (res) => {
+        //console.log(res);
+        setSkllsDeleted(true);
+        await axios.post(`${import.meta.env.VITE_BACKEND}/api/becameTutor/addSkillsInfo`, skillsData)
+      .then(res => {
+        //console.log(res);
+        toast.success('Skills Updated successfully');
+        handleNextStep();
+      })  
+      .catch(err => {
+        //console.log(err);
+        toast.error('Failed to update skills');
+      })
+      })
+      .catch(err => {
+        console.log(err);
+      })
+
+     
+  }
 
   return (
     <div className={`section-content-animated${showStep == 3 ? ' open' : ''}`}>
@@ -121,7 +166,7 @@ const SkillsAndExpertise = ({showStep, setShowStep, handleNextStep, handleSkipSt
     })}
     <Button startIcon={<AddIcon />} onClick={handleAddSkill} variant="outlined" sx={{ mt: 1 }}>Add new</Button>
     <div className="step-btn-group">
-      <Button variant="contained" className="save-next-btn" onClick={handleNextStep}>Save & Next</Button>
+      <Button variant="contained" className="save-next-btn" onClick={handleSubmit}>Save & Next</Button>
       <Button variant="outlined" className="skip-btn" onClick={handleSkipStep}>Skip</Button>
     </div>
   </div>

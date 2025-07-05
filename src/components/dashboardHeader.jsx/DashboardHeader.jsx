@@ -48,7 +48,7 @@ const DashboardHeader = ({ onToggleSidebar, currentUser} ) => {
 
 {console.log("tutorImage : ", tutorImage)
 }
-        {tutorImage ? <img src={tutorImage} /> : <img src='https://pub-c5e31b5cdafb419fb247a8ac2e78df7a.r2.dev/public/assets/images/mock/avatar/avatar-25.webp' />}
+        {tutorImage ? <img src={import.meta.env.VITE_BACKEND + "/tutorImages/" + tutorImage} /> : <img src='https://pub-c5e31b5cdafb419fb247a8ac2e78df7a.r2.dev/public/assets/images/mock/avatar/avatar-25.webp' />}
       </div>
       <div className="ms-2">
         <div>{currentUser?.user?.name}</div>

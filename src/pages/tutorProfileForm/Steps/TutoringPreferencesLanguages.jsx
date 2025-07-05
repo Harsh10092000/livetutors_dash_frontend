@@ -1,18 +1,31 @@
 import React from 'react'
 import { TextField, FormControl, InputLabel, Select, MenuItem, FormHelperText, IconButton, Button, ListSubheader, Autocomplete, Checkbox, FormControlLabel, Chip } from '@mui/material';
-import { useState } from 'react';
-
+import { useState, useEffect } from 'react';
+import axios from 'axios';
+import { AuthContext } from '../../../context2/AuthContext';
+import { useContext } from 'react';
+import { toast } from 'react-toastify';
 
 const TutoringPreferencesLanguages = ({showStep, setShowStep, handleNextStep, handleSkipStep}) => {
     const [errors, setErrors] = useState({});
+    const {currentUser} = useContext(AuthContext);
     const [formData, setFormData] = useState({
         tutoringTypes: [],
         languages: [],
         travelDistance: '',
-        assignmentHelp: false
+        assignmentHelp: false,
+        user_id: '',
 
       });
-      
+
+      useEffect(() => {
+        axios.get(`${import.meta.env.VITE_BACKEND}/api/becameTutor/fetchTutorPreferences/${currentUser?.user.id}`)
+          .then(res => {
+            setFormData(res.data);
+          })
+      }, [showStep, currentUser]);
+
+
     const tutoringOptions = [
         'Online (using Zoom etc)',
         'At my place (home/institute)',
@@ -35,6 +48,19 @@ const TutoringPreferencesLanguages = ({showStep, setShowStep, handleNextStep, ha
         }));
       };
 
+      const handleSubmit = async () => {
+        formData.user_id = currentUser?.user.id;
+        await axios.put(`${import.meta.env.VITE_BACKEND}/api/becameTutor/addTutorPreferences`, formData)
+          .then(res => {
+            console.log(res);
+            toast.success('Tutor preferences added successfully');
+            handleNextStep();
+          })
+          .catch(err => {
+            console.log(err);
+            toast.error('Failed to add tutor preferences');
+          })
+      }
   return (
     <div className={`section-content-animated${showStep == 8 ? ' open' : ''}`}>
           <div className="row">
@@ -90,7 +116,7 @@ const TutoringPreferencesLanguages = ({showStep, setShowStep, handleNextStep, ha
                 }
               />
             </div>
-            {formData.tutoringTypes.includes('Travel to student') && (
+            {formData.tutoringTypes && formData.tutoringTypes.includes('Travel to student') && (
               <div className="input-wrapper col-md-6">
                 <TextField
                   label="Maximum distance you can travel (in km)"
@@ -113,7 +139,7 @@ const TutoringPreferencesLanguages = ({showStep, setShowStep, handleNextStep, ha
             </div>
           </div>
           <div className="step-btn-group">
-            <Button variant="contained" className="save-next-btn" onClick={handleNextStep}>Save</Button>
+            <Button variant="contained" className="save-next-btn" onClick={handleSubmit}>Save</Button>
             {/* <Button variant="outlined" className="skip-btn" onClick={handleSkipStep}>Skip</Button> */}
           </div>
         </div>

@@ -1,5 +1,5 @@
 import React from 'react'
-import { TextField, FormControl, InputLabel, Select, MenuItem, FormHelperText, IconButton, Button } from '@mui/material';
+import { TextField, FormControl, InputLabel, Select, MenuItem, FormHelperText, IconButton, Button, CircularProgress } from '@mui/material';
 import { useContext, useState, useEffect } from 'react';
 import { AuthContext } from '../../../context2/AuthContext';
 import axios from 'axios';
@@ -24,9 +24,12 @@ const BasicInformation = ({ showStep, setShowStep, handleNextStep }) => {
     // Add state for profile picture
     const [profilePic, setProfilePic] = useState(null);
     const [profilePicPreview, setProfilePicPreview] = useState(null);
+    const [isSubmitting, setIsSubmitting] = useState(false);
+    const [isLoading, setIsLoading] = useState(false);
 
     useEffect(() => {
         if(currentUser?.user.id){
+            setIsLoading(true);
             axios
                 .get(import.meta.env.VITE_BACKEND + `/api/becameTutor/fetchBasicInfo/${currentUser?.user.id}`)
                 .then((res) => {
@@ -44,7 +47,11 @@ const BasicInformation = ({ showStep, setShowStep, handleNextStep }) => {
                     }
                 })
                 .catch((error) => {
-                    console.error('Error fetching basic info:', error);
+                    //console.error('Error fetching basic info:', error);
+                    toast.error('Failed to load existing data. Please refresh the page.');
+                })
+                .finally(() => {
+                    setIsLoading(false);
                 });
         }
     }, [currentUser?.user.id]);
@@ -90,6 +97,10 @@ const BasicInformation = ({ showStep, setShowStep, handleNextStep }) => {
         if (!validateStep1()) {
             return;
         }
+        
+        setIsSubmitting(true);
+        const loadingToast = toast.loading('Saving basic information...');
+        
         const formDataToSend = new FormData();
         formDataToSend.append('name', currentUser?.user.name);
         formDataToSend.append('email', currentUser?.user.email);
@@ -108,6 +119,7 @@ const BasicInformation = ({ showStep, setShowStep, handleNextStep }) => {
                     }
                 });
                 if (response.status === 200) {
+                    toast.dismiss(loadingToast);
                     toast.success('Basic information updated successfully!');
                     triggerImageFetch();
                     handleNextStep();
@@ -119,15 +131,42 @@ const BasicInformation = ({ showStep, setShowStep, handleNextStep }) => {
                     }
                 });
                 if (response.status === 201) {
+                    toast.dismiss(loadingToast);
                     toast.success('Basic information saved successfully!');
                     triggerImageFetch();
                     handleNextStep();
                 }
             }
         } catch (error) {
-            console.error('Error submitting form:', error);
+            toast.dismiss(loadingToast);
+            //console.error('Error submitting form:', error);
+            
+            // Handle different types of errors
+            if (error.response) {
+                // Server responded with error status
+                const errorMessage = error.response.data?.message || error.response.data || 'Server error occurred';
+                toast.error(`Error: ${errorMessage}`);
+            } else if (error.request) {
+                // Network error
+                toast.error('Network error: Please check your internet connection');
+            } else {
+                // Other errors
+                toast.error('An unexpected error occurred. Please try again.');
+            }
+        } finally {
+            setIsSubmitting(false);
         }
     };
+
+    if (isLoading) {
+        return (
+            <div className={`section-content-animated${showStep == 1 ? ' open' : ''}`}>
+                <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '200px' }}>
+                    <div>Loading existing data...</div>
+                </div>
+            </div>
+        );
+    }
 
     return (
             <div className={`section-content-animated${showStep == 1 ? ' open' : ''}`}>
@@ -226,7 +265,15 @@ const BasicInformation = ({ showStep, setShowStep, handleNextStep }) => {
 
                 </div>
                 <div className="step-btn-group">
-                    <Button variant="contained" className="save-next-btn" onClick={handleSubmit}>Save & Next</Button>
+                    <Button 
+                        variant="contained" 
+                        className="save-next-btn" 
+                        onClick={handleSubmit}
+                        disabled={isSubmitting}
+                        startIcon={isSubmitting ? <CircularProgress size={20} color="inherit" /> : null}
+                    >
+                        {isSubmitting ? 'Saving...' : 'Save & Next'}
+                    </Button>
                 </div>
             </div>
         )
