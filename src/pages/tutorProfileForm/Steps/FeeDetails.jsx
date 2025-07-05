@@ -14,9 +14,14 @@ const FeeDetails = ({showStep, setShowStep, handleNextStep, handleSkipStep}) => 
   useEffect(() => {
     axios.get(`${import.meta.env.VITE_BACKEND}/api/becameTutor/fetchFeeInfo/${currentUser?.user.id}`)
       .then(res => {
-        setFeeDetails(res.data);
+        setFeeDetails({
+          fee_charged_for: res.data[0].fee_charged_for || '',
+          fee_max: res.data[0].fee_max || '',
+          fee_min: res.data[0].fee_min || '',
+          fee_details: res.data[0].fee_details || ''
+        });
       })
-  }, [showStep, currentUser]);
+  }, [currentUser]);
 
   const handleSubmit = async () => {
     feeDetails.user_id = currentUser?.user.id;

@@ -18,15 +18,22 @@ const AddressSection = ({showStep, setShowStep, handleNextStep, handleSkipStep})
     const {currentUser} = useContext(AuthContext);
 
     useEffect(() => {
-      axios.get(`${import.meta.env.VITE_BACKEND}/api/becameTutor/fetchAddressInfo/${currentUser?.user.id}`)
-        .then(res => {
-          setFormData({
-            streetAddress: res.data[0].street_add,
-            state: stateList.find(state => state.name === res.data[0].state),
-            city: cityList.find(city => city.city_name === res.data[0].city)
+      if (currentUser?.user.id) {
+        axios.get(`${import.meta.env.VITE_BACKEND}/api/becameTutor/fetchAddressInfo/${currentUser?.user.id}`)
+          .then(res => {
+            if (res.data && res.data.length > 0) {
+              setFormData({
+                streetAddress: res.data[0].street_add || '',
+                state: stateList.find(state => state.name === res.data[0].state) || null,
+                city: cityList.find(city => city.city_name === res.data[0].city) || null
+              });
+            }
+          })
+          .catch(err => {
+            console.error('Error fetching address info:', err);
           });
-        })
-    }, [showStep, currentUser]);
+      }
+    }, [currentUser?.user.id]);
     const handleChange = (e) => {
         const { name, value } = e.target;
         setFormData(prev => ({

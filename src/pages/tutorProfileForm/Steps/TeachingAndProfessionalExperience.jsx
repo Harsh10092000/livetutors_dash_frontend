@@ -1,12 +1,17 @@
 import React from 'react'
 import { TextField, FormControl, InputLabel, Select, MenuItem, FormHelperText, IconButton, Button, ListSubheader } from '@mui/material';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import AddIcon from '@mui/icons-material/Add';
 import CloseIcon from '@mui/icons-material/Close';
-
+import axios from 'axios';
+import { AuthContext } from '../../../context2/AuthContext';
+import { useContext } from 'react';
+import { toast } from 'react-toastify';
 const TeachingAndProfessionalExperience = ({showStep, setShowStep, handleNextStep, handleSkipStep}) => {
     const [errors, setErrors] = useState({});
-
+    const [isSubmitting, setIsSubmitting] = useState(false);
+    const [isLoading, setIsLoading] = useState(false);
+    const {currentUser} = useContext(AuthContext);
       // Add state for extra experience questions
   const [overallTeachingExp, setOverallTeachingExp] = useState('');
   const [hasOnlineExp, setHasOnlineExp] = useState('no');
@@ -35,7 +40,110 @@ const TeachingAndProfessionalExperience = ({showStep, setShowStep, handleNextSte
       const handleRemoveProfExp = (idx) => {
         setProfExp(prev => prev.filter((_, i) => i !== idx));
       };
-    
+
+      useEffect(() => {
+        if (currentUser?.user.id) {
+          setIsLoading(true);
+          axios.get(`${import.meta.env.VITE_BACKEND}/api/becameTutor/fetchTeachingExperience/${currentUser?.user.id}`)
+            .then(res => {
+              if (res.data && res.data.length > 0) {
+                setOverallTeachingExp(res.data[0].total_exp_yrs || '');
+                setHasOnlineExp(res.data[0].online_exp || 'no');
+                setOnlineExpYears(res.data[0].total_online_exp_yrs || '');
+              }
+            })
+            .catch(err => {
+              console.error('Error fetching teaching experience:', err);
+            })
+            .finally(() => {
+              setIsLoading(false);
+            });
+        }
+      }, [currentUser?.user.id]);
+
+      useEffect(() => {
+        if (currentUser?.user.id) {
+          axios.get(`${import.meta.env.VITE_BACKEND}/api/becameTutor/fetchTutorExperience/${currentUser?.user.id}`)
+            .then(res => {
+              setProfExp(res.data.map(exp => ({
+                org: exp.company,
+                designation: exp.role,
+                startMonth: exp.start_month,
+                startYear: exp.start_year,
+                endMonth: exp.end_month,
+                endYear: exp.end_year,
+                association: exp.association,
+                roles: exp.description
+              })));
+            })
+            .catch(err => {
+              console.error('Error fetching tutor experience:', err);
+            })
+            .finally(() => {
+              setIsLoading(false);
+            });
+        }
+      }, [currentUser?.user.id]);
+
+      const handleSubmit = async () => {
+        setIsSubmitting(true);
+        const loadingToast = toast.loading('Saving teaching experience...');
+        
+        try {
+          // First, update the teaching experience in tutor_info table
+          await axios.put(`${import.meta.env.VITE_BACKEND}/api/becameTutor/addTeachingExperience`, {
+            totalExpYrs: overallTeachingExp,
+            onlineExp: hasOnlineExp,
+            totalOnlineExpYrs: onlineExpYears,
+            user_id: currentUser?.user.id
+          });
+
+          // Then, handle professional experience entries
+          if (profExp.length > 0 && profExp[0].org) {
+            // Delete existing experience entries
+            await axios.delete(`${import.meta.env.VITE_BACKEND}/api/becameTutor/deleteTutorExperience/${currentUser?.user.id}`);
+            
+            // Add new experience entries
+            const experienceData = profExp
+              .filter(exp => exp.org && exp.designation) // Only add if organization and designation are filled
+              .map(exp => ({
+                company: exp.org,
+                role: exp.designation,
+                start_month: exp.startMonth,
+                start_year: exp.startYear,
+                end_month: exp.endMonth,
+                end_year: exp.endYear,
+                description: exp.roles,
+                user_id: currentUser?.user.id
+              }));
+
+            if (experienceData.length > 0) {
+              await axios.post(`${import.meta.env.VITE_BACKEND}/api/becameTutor/addTutorExperience`, experienceData);
+            }
+          }
+
+          toast.dismiss(loadingToast);
+          toast.success('Teaching experience added successfully');
+          handleNextStep();
+        } catch (err) {
+          toast.dismiss(loadingToast);
+          console.error('Error submitting teaching experience:', err);
+          toast.error('Failed to add teaching experience');
+        } finally {
+          setIsSubmitting(false);
+        }
+      }
+
+  if (isLoading) {
+    return (
+      <div className={`section-content-animated${showStep == 6 ? ' open' : ''}`}>
+        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '200px' }}>
+          <div>Loading existing data...</div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className={`section-content-animated${showStep == 6 ? ' open' : ''}`}>
     <div className="row">
@@ -175,7 +283,14 @@ const TeachingAndProfessionalExperience = ({showStep, setShowStep, handleNextSte
     ))}
     <Button startIcon={<AddIcon />} onClick={handleAddProfExp} variant="outlined" sx={{ mt: 1 }}>Add new</Button>
     <div className="step-btn-group">
-      <Button variant="contained" className="save-next-btn" onClick={handleNextStep}>Save & Next</Button>
+      <Button 
+        variant="contained" 
+        className="save-next-btn" 
+        onClick={handleSubmit}
+        disabled={isSubmitting}
+      >
+        {isSubmitting ? 'Saving...' : 'Save & Next'}
+      </Button>
       <Button variant="outlined" className="skip-btn" onClick={handleSkipStep}>Skip</Button>
     </div>
   </div>

@@ -13,15 +13,27 @@ const SkillsAndExpertise = ({showStep, setShowStep, handleNextStep, handleSkipSt
     const [skills, setSkills] = useState([{ skill: '', from: '', to: '' }]);
 
     useEffect(() => {
-      axios.get(`${import.meta.env.VITE_BACKEND}/api/becameTutor/fetchSkillsInfo/${currentUser?.user.id}`)
-        .then(res => {  
-          setSkills(res.data.map(skill => ({
-            skill: skill.skill_name,
-            from: skill.from_level,
-            to: skill.to_level
-          })));
-        })
-    }, [showStep, currentUser]);
+      if (currentUser?.user.id) {
+        axios.get(`${import.meta.env.VITE_BACKEND}/api/becameTutor/fetchSkillsInfo/${currentUser?.user.id}`)
+          .then(res => {  
+            if (res.data && Array.isArray(res.data) && res.data.length > 0) {
+              setSkills(res.data.map(skill => ({
+                skill: skill.skill_name,
+                from: skill.from_level,
+                to: skill.to_level
+              })));
+            } else {
+              // If no skills found, keep the default empty skill row
+              setSkills([{ skill: '', from: '', to: '' }]);
+            }
+          })
+          .catch(err => {
+            console.error('Error fetching skills:', err);
+            // Keep default state on error
+            setSkills([{ skill: '', from: '', to: '' }]);
+          });
+      }
+    }, [currentUser?.user.id]);
       // Add state for skills
   console.log(skills);
   const skillOptions = [

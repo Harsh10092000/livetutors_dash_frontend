@@ -22,7 +22,7 @@ const EducationDetails = ({showStep, setShowStep, handleNextStep, handleSkipStep
               grade: edu.score
             })));
           })
-    }, [showStep, currentUser]);
+    }, [currentUser]);
 
     // Add state for education details
   // const [education, setEducation] = useState([

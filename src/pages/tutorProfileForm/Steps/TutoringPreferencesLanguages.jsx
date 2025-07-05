@@ -19,11 +19,24 @@ const TutoringPreferencesLanguages = ({showStep, setShowStep, handleNextStep, ha
       });
 
       useEffect(() => {
-        axios.get(`${import.meta.env.VITE_BACKEND}/api/becameTutor/fetchTutorPreferences/${currentUser?.user.id}`)
-          .then(res => {
-            setFormData(res.data);
-          })
-      }, [showStep, currentUser]);
+        if (currentUser?.user.id) {
+          axios.get(`${import.meta.env.VITE_BACKEND}/api/becameTutor/fetchTutorPreferences/${currentUser?.user.id}`)
+            .then(res => {
+              if (res.data && res.data.length > 0) {
+                setFormData({
+                  tutoringTypes: res.data[0].tutoring_preferences ? JSON.parse(res.data[0].tutoring_preferences) : [],
+                  languages: res.data[0].language_preferences ? JSON.parse(res.data[0].language_preferences) : [],
+                  travelDistance: res.data[0].travel_distance || '',
+                  assignmentHelp: res.data[0].can_do_assignmnet === 'true' || res.data[0].can_do_assignmnet === true,
+                  user_id: currentUser?.user.id
+                });
+              }
+            })
+            .catch(err => {
+              console.error('Error fetching tutor preferences:', err);
+            });
+        }
+      }, [currentUser?.user.id]);
 
 
     const tutoringOptions = [

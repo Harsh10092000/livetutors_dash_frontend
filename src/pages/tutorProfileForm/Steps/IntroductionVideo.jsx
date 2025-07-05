@@ -19,7 +19,7 @@ const IntroductionVideo = ({showStep, setShowStep, handleNextStep, handleSkipSte
         .then(res => {
             setIntroVideo({url: res.data[0].intro_video_url});
         })
-    }, [showStep, currentUser]);
+    }, [currentUser]);
     const validateStep2 = () => {
         if (!introVideo.url) return true; // optional
         // Validate YouTube URL
