@@ -24,8 +24,8 @@ const TutoringPreferencesLanguages = ({showStep, setShowStep, handleNextStep, ha
             .then(res => {
               if (res.data && res.data.length > 0) {
                 setFormData({
-                  tutoringTypes: res.data[0].tutoring_preferences ? JSON.parse(res.data[0].tutoring_preferences) : [],
-                  languages: res.data[0].language_preferences ? JSON.parse(res.data[0].language_preferences) : [],
+                  tutoringTypes: res.data[0].tutoring_preferences ? res.data[0].tutoring_preferences.split(',') : [],
+                  languages: res.data[0].language_preferences ? res.data[0].language_preferences.split(',') : [],
                   travelDistance: res.data[0].travel_distance || '',
                   assignmentHelp: res.data[0].can_do_assignmnet === 'true' || res.data[0].can_do_assignmnet === true,
                   user_id: currentUser?.user.id
@@ -63,7 +63,15 @@ const TutoringPreferencesLanguages = ({showStep, setShowStep, handleNextStep, ha
 
       const handleSubmit = async () => {
         formData.user_id = currentUser?.user.id;
-        await axios.put(`${import.meta.env.VITE_BACKEND}/api/becameTutor/addTutorPreferences`, formData)
+
+        // Convert arrays to comma-separated strings
+        const dataToSend = {
+          ...formData,
+          tutoringTypes: Array.isArray(formData.tutoringTypes) ? formData.tutoringTypes.join(',') : formData.tutoringTypes,
+          languages: Array.isArray(formData.languages) ? formData.languages.join(',') : formData.languages,
+        };
+
+        await axios.put(`${import.meta.env.VITE_BACKEND}/api/becameTutor/addTutorPreferences`, dataToSend)
           .then(res => {
             console.log(res);
             toast.success('Tutor preferences added successfully');
@@ -72,7 +80,7 @@ const TutoringPreferencesLanguages = ({showStep, setShowStep, handleNextStep, ha
           .catch(err => {
             console.log(err);
             toast.error('Failed to add tutor preferences');
-          })
+          });
       }
   return (
     <div className={`section-content-animated${showStep == 8 ? ' open' : ''}`}>

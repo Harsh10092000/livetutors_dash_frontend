@@ -344,6 +344,10 @@ const RequestTutor = () => {
 
     try {
       // Create FormData object
+      formData.name = currentUser?.user.name;
+      formData.email = currentUser?.user.email;
+      formData.phone = currentUser?.user.phone;
+      formData.user_id = currentUser?.user.id;
       const formDataToSend = new FormData();
       
       // Add all form fields to FormData
